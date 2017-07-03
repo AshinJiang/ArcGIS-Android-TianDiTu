@@ -5,12 +5,18 @@ import android.support.v7.app.AppCompatActivity;
 
 import com.esri.arcgisruntime.arcgisservices.TileInfo;
 import com.esri.arcgisruntime.geometry.Envelope;
+import com.esri.arcgisruntime.layers.WebTiledLayer;
+import com.esri.arcgisruntime.layers.WmtsLayer;
+import com.esri.arcgisruntime.loadable.LoadStatus;
 import com.esri.arcgisruntime.mapping.ArcGISMap;
 import com.esri.arcgisruntime.mapping.view.MapView;
 import com.shaunsheep.ags1001.tdt.LayerInfoFactory;
 import com.shaunsheep.ags1001.tdt.TianDiTuLayerTypes;
+import com.shaunsheep.ags1001.tdtwebtiledlayer.TdtTemplateUri;
 import com.shaunsheep.ags1001.tianditu.TianDiTuLayer;
 import com.shaunsheep.ags1001.tianditu.TianDiTuLayerInfo;
+
+import java.util.Arrays;
 
 public class TianDiTuActivity extends AppCompatActivity {
     private MapView mapView;
@@ -21,8 +27,44 @@ public class TianDiTuActivity extends AppCompatActivity {
         setContentView(R.layout.activity_tian_di_tu);
         mapView=(MapView)findViewById(R.id.mapview);
 
-        addTdt();
+        addWebTileds();
     }
+
+    /**
+     * 用WebTiledLayer加载天地图
+     */
+    private void addWebTileds(){
+        String tempurl="http://t0.tianditu.com/vec_c/wmts?"+
+                "service=wmts&request=gettile&version=1.0.0&layer=vec&STYLE=default"+
+                "&tilematrixset=c&tilematrix={level}&tilerow={row}&tilecol={col}&format=tiles";
+
+        String templateUri= TdtTemplateUri.getTemplateUri(TdtTemplateUri.ServiceType.CVA_C,
+                TdtTemplateUri.LayerName.VECTOR_ANNOTATION_CHINESE,
+                TdtTemplateUri.TiledFormat.PNG);
+
+        final WebTiledLayer webTiledLayer = new WebTiledLayer(templateUri);
+
+        webTiledLayer.addDoneLoadingListener(new Runnable() {
+            public void run() {
+                if (webTiledLayer.getLoadStatus() == LoadStatus.LOADED) {
+                    // work with the layer here
+                }
+            }
+        });
+        String templateUri1= TdtTemplateUri.getTemplateUri(TdtTemplateUri.ServiceType.VEC_C,
+                TdtTemplateUri.LayerName.VECTOR,
+                TdtTemplateUri.TiledFormat.PNG);
+        WebTiledLayer webTiledLayer1 = new WebTiledLayer(templateUri1);
+
+        ArcGISMap map=new ArcGISMap();
+        map.getOperationalLayers().add(webTiledLayer1);
+        map.getOperationalLayers().add(webTiledLayer);
+        mapView.setMap(map);
+    }
+
+    /**
+     * 扩展ImageTiledLayer加载天地图
+     */
     private void addTDT(){
         com.shaunsheep.ags1001.tdt.TianDiTuLayerInfo layerInfo=
                 LayerInfoFactory.getLayerInfo(TianDiTuLayerTypes.TIANDITU_VECTOR_2000);
@@ -36,7 +78,9 @@ public class TianDiTuActivity extends AppCompatActivity {
         map.getBasemap().getBaseLayers().add(layer);
         mapView.setMap(map);
     }
-
+    /**
+     * 扩展ImageTiledLayer加载天地图
+     */
     private void addTdt(){
         TianDiTuLayerInfo tdtInfo = new TianDiTuLayerInfo();
         TianDiTuLayerInfo tdtInfo01 = tdtInfo.initwithlayerType(TianDiTuLayerInfo.TianDiTuLayerType.TDT_IMAGE,
